@@ -22,36 +22,37 @@ have_balls = 0
 
 
 def new_parameters():
-    global x, y, r, COLOR
-    x = randint(50, 600)
-    y = randint(50, 500)
-    r = randint(30, 60)
-    COLOR = colors[randint(0, 5)]
+    global x, y, r, COLOR, A, B
+    A=[randint(50, 600), randint(50, 600), randint(30, 60), colors[randint(0, 5)]]
+    B=[randint(50, 600), randint(50, 600), randint(30, 60), colors[randint(0, 5)]]
 
 
-def parameter_x():
-    return x
+def new_ball1():
+    pygame.draw.circle(screen, A[3], (A[0], A[1]), A[2])
 
 
-def new_ball():
-    for i in range(3):
-        pygame.draw.circle(screen, COLOR, (x, y), r)
+def new_ball2():
+    pygame.draw.circle(screen, B[3], (B[0], B[1]), B[2])
 
 
 def click():
-    length = ((event.x - x) ** 2 + (event.y - y) ** 2) ** 0.5
-    if length <= r:
+    length1 = ((event.x - A[0]) ** 2 + (event.y - A[1]) ** 2) ** 0.5
+    length2 = ((event.x - B[0]) ** 2 + (event.y - B[1]) ** 2) ** 0.5
+    if length1 <= A[2] or length2 <=B[2]:
         screen.fill(white)
         pygame.display.update()
         return 1
     return 0
 
-
 new_parameters()
-all_balls += 1
+if A[0] > B[0]:
+    C = [A[0],B[0]]
+else:
+    C = [B[0],A[0]]
 while not done:
-    while not done and x + r < 800:
-        new_ball()
+    while not done and C[0]<700:
+        new_ball1()
+        new_ball2()
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -61,14 +62,18 @@ while not done:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 event.x, event.y = event.pos
                 have_balls += click()
-                if click() > 0:
-                    new_parameters()
-                    all_balls += 1
+    #               if click() > 0:
+    #                   new_parameters()
+    #                   all_balls += 1
         screen.fill(black)
         clock.tick(25)
-        x+=10
-    while not done and x - r > 0:
-        new_ball()
+        A[0] += 10
+        B[0] += 10
+        C[0]+=10
+        C[1]+=10
+    while not done and C[1] < 700:
+        new_ball1()
+        new_ball2()
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -78,11 +83,67 @@ while not done:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 event.x, event.y = event.pos
                 have_balls += click()
-                if click() > 0:
-                    new_parameters()
-                    all_balls += 1
+        #               if click() > 0:
+        #                   new_parameters()
+        #                   all_balls += 1
         screen.fill(black)
         clock.tick(25)
-        x -= 10
-
+        if A[0]==C[0]:
+            A[0] -= 10
+            B[0] += 10
+        else:
+            A[0] += 10
+            B[0] -= 10
+        C[1] += 10
+        C[0] -= 10
+    while not done and C[0] >50:
+        new_ball1()
+        new_ball2()
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Поймал шариков:", have_balls)
+                print("Всего шариков:", all_balls)
+                done = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                event.x, event.y = event.pos
+                have_balls += click()
+        #               if click() > 0:
+        #                   new_parameters()
+        #                   all_balls += 1
+        screen.fill(black)
+        clock.tick(25)
+        if C[0]==A[0]:
+            A[0] -= 10
+            B[0] -= 10
+        else:
+            A[0] -= 10
+            B[0] -= 10
+        C[0]-=10
+        C[1]-=10
+    while not done and C[1] >50:
+        new_ball1()
+        new_ball2()
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Поймал шариков:", have_balls)
+                print("Всего шариков:", all_balls)
+                done = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                event.x, event.y = event.pos
+                have_balls += click()
+        #               if click() > 0:
+        #                   new_parameters()
+        #                   all_balls += 1
+        screen.fill(black)
+        clock.tick(25)
+        if C[0]==A[0]:
+            A[0] += 10
+            B[0] -= 10
+        else:
+            A[0] -= 10
+            B[0] += 10
+        C[1]-=10
+        C[0]+=10
 pygame.quit()
