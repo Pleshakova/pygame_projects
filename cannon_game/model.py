@@ -46,7 +46,7 @@ class CannonGun(Cannon):
     def __init__(self):
         super().__init__()
         self.angle = math.pi / 2
-        self.coord = self.gun_coord()
+        self.coord = []
         self.pow = 0
 
     def gun_angle(self, other_x, other_y):
@@ -66,16 +66,14 @@ class CannonGun(Cannon):
         self.coord = []
         self.coord.append(self.x + int(self.length * math.cos(self.angle)))
         self.coord.append(self.y - int(self.length * math.sin(self.angle)))
-        print(self.coord)
         return self.coord
 
     def move(self, speed):
         self.x += speed
-        self.coord = self.gun_coord()
+        self.gun_coord()
 
     def show(self):
-        print(self.coord)
-        pygame.draw.line(screen, color, (self.x, self.y), self.coord, self.width)
+        pygame.draw.line(screen, color, (self.x, self.y), self.gun_coord(), self.width) # TODO why not self.coord?
 
     def fire(self):
         """
@@ -151,11 +149,12 @@ class GameManager:
     def move(self):
         for shell in self.shells:
             shell.move()
-            shell.show()
 
-    def game_process(self):
+    def game_show(self):
         self.cannon.show()
         self.gun.show()
+        for shell in self.shells:
+            shell.show()
 
 
 def main():
@@ -164,7 +163,7 @@ def main():
         clock.tick(20)
         mng.event_handler()
         mng.move()
-        mng.game_process()
+        mng.game_show()
         pygame.display.flip()
         screen.fill(BLACK)
 
