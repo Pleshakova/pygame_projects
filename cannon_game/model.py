@@ -73,7 +73,7 @@ class CannonGun(Cannon):
         self.gun_coord()
 
     def show(self):
-        pygame.draw.line(screen, color, (self.x, self.y), self.gun_coord(), self.width) # TODO why not self.coord?
+        pygame.draw.line(screen, color, (self.x, self.y), self.gun_coord(), self.width)  # TODO why not self.coord?
 
     def fire(self):
         """
@@ -98,10 +98,10 @@ class Shell(CannonGun):
         self.Vx = 0
         self.Vy = 0
 
-    def move(self, time = 1):
+    def move(self, time=1):
         ax, ay = 0, 9.8
-        self.coord[0] += int(self.Vx * time + int(ax * (time**2) / 2))
-        self.coord[1] += int(self.Vy * time + int(ay * (time**2) / 2))
+        self.coord[0] += int(self.Vx * time + int(ax * (time ** 2) / 2))
+        self.coord[1] += int(self.Vy * time + int(ay * (time ** 2) / 2))
         self.Vx += ax * time
         self.Vy += ay * time
 
@@ -116,13 +116,19 @@ class Target:
     target_field_width = width
     target_field_height = height // 3
 
-    def __init__(self, coord, target_width, target_height):
-        self.coord = coord
-        self.width = target_width
-        self.height = target_height
+    def __init__(self):
+        self.coord = []
+        self.width = randint(30, 100)
+        self.height = randint(30, 100)
         self.fire_angle = math.pi * 3 / 2
 
+    def set_coords(self):
+        self.coord.append(randint(self.width // 2, self.target_field_width - self.width // 2))
+        self.coord.append(randint(self.height // 2, self.target_field_height - self.height // 2))
+        return self.coord
+
     def show(self):
+        self.coord = self.set_coords()
         pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
 
     def fire(self):
@@ -131,6 +137,7 @@ class Target:
         :return: экземпляр бомбы
         """
         pass
+
 
 class TargetMove(Target):
     pass
@@ -145,7 +152,13 @@ class GameManager:
         self.cannon = Cannon()
         self.gun = CannonGun()
         self.shells = []
+        self.targets = []
         self.finished = False
+
+    def target_creation(self, n):
+        for i in range(n):
+            self.targets.append(Target())
+        return self.targets
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -178,17 +191,15 @@ class GameManager:
         self.gun.show()
         for shell in self.shells:
             shell.show()
+        for target in self.targets:
+            target.show()
 
 
 def main():
-    targets = []
-    for i in range(5):
-        targets.append(Target([randint(0, Target.target_field_width), randint(0, Target.target_field_height)], 100, 50))
     mng = GameManager()
+    mng.target_creation(3)
     while not mng.finished:
         clock.tick(20)
-        for target in targets:
-            target.show()
         mng.event_handler()
         mng.move()
         mng.game_show()
