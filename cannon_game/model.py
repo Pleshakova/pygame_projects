@@ -108,7 +108,7 @@ class Shell(CannonGun):
     def show(self):
         pygame.draw.circle(screen, color, self.coord, self.standart_radius)
 
-    def is_reached_frame(self):
+    def is_reached_border(self):
         return self.coord[0] <= 0 or self.coord[0] >= width or self.coord[1] <= 0 or self.coord[1] >= height
 
 
@@ -120,6 +120,7 @@ class Target:
         self.coord = []
         self.width = randint(30, 100)
         self.height = randint(30, 100)
+        self.coord = self.set_coords()
         self.fire_angle = math.pi * 3 / 2
 
     def set_coords(self):
@@ -128,7 +129,6 @@ class Target:
         return self.coord
 
     def show(self):
-        self.coord = self.set_coords()
         pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
 
     def fire(self):
@@ -140,7 +140,17 @@ class Target:
 
 
 class TargetMove(Target):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.Vx = randint(-10, 10)
+
+    def move(self):
+        if self.is_reached_border():
+            self.Vx = -1 * self.Vx
+        self.coord[0] += self.Vx
+
+    def is_reached_border(self):
+        return self.coord[0] + self.width // 2 >= width or self.coord[0] - self.width // 2 <= 0
 
 
 class Bomb:
@@ -152,13 +162,19 @@ class GameManager:
         self.cannon = Cannon()
         self.gun = CannonGun()
         self.shells = []
-        self.targets = []
+        self.moving_targets = []
+        self.non_moving_targets = []
         self.finished = False
 
-    def target_creation(self, n):
+    def non_moving_target_creation(self, n):
         for i in range(n):
-            self.targets.append(Target())
-        return self.targets
+            self.non_moving_targets.append(Target())
+        return self.non_moving_targets
+
+    def moving_target_creation(self, n):
+        for i in range(n):
+            self.moving_targets.append(TargetMove())
+        return self.moving_targets
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -180,24 +196,28 @@ class GameManager:
 
     def move(self):
         for shell in self.shells:
-            if not shell.is_reached_frame():
+            if not shell.is_reached_border():
                 shell.move()
-
             else:
                 self.shells.remove(shell)
+        for target in self.moving_targets:
+            target.move()
 
     def game_show(self):
         self.cannon.show()
         self.gun.show()
         for shell in self.shells:
             shell.show()
-        for target in self.targets:
+        for target in self.moving_targets:
+            target.show()
+        for target in self.non_moving_targets:
             target.show()
 
 
 def main():
     mng = GameManager()
-    mng.target_creation(3)
+    mng.moving_target_creation(5)
+    mng.non_moving_target_creation(5)
     while not mng.finished:
         clock.tick(20)
         mng.event_handler()
