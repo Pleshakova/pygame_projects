@@ -78,7 +78,7 @@ class CannonGun(Cannon):
     def fire(self):
         """
         Создает снаряд с присвоедием определенной скорости
-        :return: снаряд
+        :return: экземпляр снаряда
         """
         self.pow = 100
         shell = Shell(coord=self.coord, angle=self.angle)
@@ -108,16 +108,35 @@ class Shell(CannonGun):
     def show(self):
         pygame.draw.circle(screen, color, self.coord, self.standart_radius)
 
+    def is_reached_frame(self):
+        return self.coord[0] <= 0 or self.coord[0] >= width or self.coord[1] <= 0 or self.coord[1] >= height
+
 
 class Target:
-    pass
+    target_field_width = width
+    target_field_height = height // 3
 
+    def __init__(self, coord, target_width, target_height):
+        self.coord = coord
+        self.width = target_width
+        self.height = target_height
+        self.fire_angle = math.pi * 3 / 2
+
+    def show(self):
+        pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
+
+    def fire(self):
+        """
+        Создает бомбу с передачей собственных координат и с заданным направлением удара
+        :return: экземпляр бомбы
+        """
+        pass
 
 class TargetMove(Target):
     pass
 
 
-class Meteor_rain:
+class Bomb:
     pass
 
 
@@ -148,7 +167,11 @@ class GameManager:
 
     def move(self):
         for shell in self.shells:
-            shell.move()
+            if not shell.is_reached_frame():
+                shell.move()
+
+            else:
+                self.shells.remove(shell)
 
     def game_show(self):
         self.cannon.show()
@@ -158,9 +181,14 @@ class GameManager:
 
 
 def main():
+    targets = []
+    for i in range(5):
+        targets.append(Target([randint(0, Target.target_field_width), randint(0, Target.target_field_height)], 100, 50))
     mng = GameManager()
     while not mng.finished:
         clock.tick(20)
+        for target in targets:
+            target.show()
         mng.event_handler()
         mng.move()
         mng.game_show()
