@@ -2,12 +2,9 @@ import pygame
 from random import randint
 import math
 
-pygame.init()
-
 width = 800
 height = 600
 screen = pygame.display.set_mode((width, height))
-clock = pygame.time.Clock()
 color = (randint(0, 255), randint(0, 255), randint(0, 255))  # FIXME цвет не должен сливаться с экраном
 BLACK = (0, 0, 0)
 
@@ -118,31 +115,33 @@ class Target:
 
     def __init__(self):
         self.coord = []
-        self.width = randint(30, 100)
-        self.height = randint(30, 100)
+        self.width = 100
+        self.height = 50
         self.coord = self.set_coords()
+        self.target_center = [(self.coord[0] + self.width) // 2, (self.coord[1] + self.height) // 2]
         self.fire_angle = math.pi * 3 / 2
 
     def set_coords(self):
-        self.coord.append(randint(self.width // 2, self.target_field_width - self.width // 2))
-        self.coord.append(randint(self.height // 2, self.target_field_height - self.height // 2))
+        self.coord.append(randint(0, self.target_field_width - self.width))
+        self.coord.append(randint(0, self.target_field_height - self.height))
         return self.coord
-
-    def show(self):
-        pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
 
     def fire(self):
         """
         Создает бомбу с передачей собственных координат и с заданным направлением удара
         :return: экземпляр бомбы
         """
-        pass
+        bomb = Bomb(coord=self.target_center)
+        return bomb
+
+    def show(self):
+        pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
 
 
 class TargetMove(Target):
     def __init__(self):
         super().__init__()
-        self.Vx = randint(-10, 10)
+        self.Vx = randint(-5, 5)
 
     def move(self):
         if self.is_reached_border():
@@ -154,7 +153,15 @@ class TargetMove(Target):
 
 
 class Bomb:
-    pass
+    def __init__(self, coord):
+        self.coord = coord
+        self.radius = 30
+
+    def move(self):
+        pass
+
+    def show(self):
+        pygame.draw.circle(screen, [100, 100, 100], self.coord, self.radius)  # TODO change color
 
 
 class GameManager:
@@ -162,19 +169,14 @@ class GameManager:
         self.cannon = Cannon()
         self.gun = CannonGun()
         self.shells = []
-        self.moving_targets = []
         self.non_moving_targets = []
+        self.bombs = []
         self.finished = False
 
     def non_moving_target_creation(self, n):
         for i in range(n):
             self.non_moving_targets.append(Target())
         return self.non_moving_targets
-
-    def moving_target_creation(self, n):
-        for i in range(n):
-            self.moving_targets.append(TargetMove())
-        return self.moving_targets
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -200,26 +202,35 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
-        for target in self.moving_targets:
-            target.move()
 
     def game_show(self):
         self.cannon.show()
         self.gun.show()
         for shell in self.shells:
             shell.show()
-        for target in self.moving_targets:
-            target.show()
         for target in self.non_moving_targets:
             target.show()
 
+    def target_fire(self):
+        for target in self.non_moving_targets:
+            self.bombs.append(target.fire())
+        for bomb in self.bombs:
+            bomb.show()
+
 
 def main():
+    pygame.init()
+    time = pygame.time.get_ticks()
+    clock = pygame.time.Clock()
     mng = GameManager()
-    mng.moving_target_creation(5)
     mng.non_moving_target_creation(5)
     while not mng.finished:
-        clock.tick(20)
+        clock.tick(30)
+        if pygame.time.get_ticks() >= time + 1000:
+            time = pygame.time.get_ticks()
+            mng.target_fire()
+
+            print('hello')
         mng.event_handler()
         mng.move()
         mng.game_show()
