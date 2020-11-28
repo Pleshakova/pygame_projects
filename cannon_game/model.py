@@ -118,8 +118,9 @@ class Target:
         self.width = 100
         self.height = 50
         self.coord = self.set_coords()
-        self.target_center = [(self.coord[0] + self.width) // 2, (self.coord[1] + self.height) // 2]
+        self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
         self.fire_angle = math.pi * 3 / 2
+        self.pow = 30
 
     def set_coords(self):
         self.coord.append(randint(0, self.target_field_width - self.width))
@@ -131,7 +132,7 @@ class Target:
         Создает бомбу с передачей собственных координат и с заданным направлением удара
         :return: экземпляр бомбы
         """
-        bomb = Bomb(coord=self.target_center)
+        bomb = Bomb(coord=self.target_center, pow=self.pow, angle=self.fire_angle)
         return bomb
 
     def show(self):
@@ -153,12 +154,15 @@ class TargetMove(Target):
 
 
 class Bomb:
-    def __init__(self, coord):
+    def __init__(self, coord, pow, angle):
         self.coord = coord
         self.radius = 30
+        self.pow = pow
+        self.angle = angle
 
     def move(self):
-        pass
+        self.coord[0] += int(math.cos(self.angle) * self.pow)
+        self.coord[1] += 10
 
     def show(self):
         pygame.draw.circle(screen, [100, 100, 100], self.coord, self.radius)  # TODO change color
@@ -177,6 +181,10 @@ class GameManager:
         for i in range(n):
             self.non_moving_targets.append(Target())
         return self.non_moving_targets
+
+    def target_fire(self):
+        for target in self.non_moving_targets:
+            self.bombs.append(target.fire())
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -202,6 +210,8 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
+        for bomb in self.bombs:
+            bomb.move()
 
     def game_show(self):
         self.cannon.show()
@@ -210,13 +220,8 @@ class GameManager:
             shell.show()
         for target in self.non_moving_targets:
             target.show()
-
-    def target_fire(self):
-        for target in self.non_moving_targets:
-            self.bombs.append(target.fire())
         for bomb in self.bombs:
             bomb.show()
-
 
 def main():
     pygame.init()
@@ -228,9 +233,8 @@ def main():
         clock.tick(30)
         if pygame.time.get_ticks() >= time + 1000:
             time = pygame.time.get_ticks()
-            mng.target_fire()
-
             print('hello')
+            mng.target_fire()
         mng.event_handler()
         mng.move()
         mng.game_show()
