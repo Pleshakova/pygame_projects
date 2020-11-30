@@ -182,9 +182,12 @@ class GameManager:
             self.non_moving_targets.append(Target())
         return self.non_moving_targets
 
-    def target_fire(self):
+    def target_fire(self): # TODO сделать список списков
+        set_bombs = []
         for target in self.non_moving_targets:
-            self.bombs.append(target.fire())
+            set_bombs.append(target.fire())
+        self.bombs.append(set_bombs)
+        return self.bombs
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -210,8 +213,10 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
-        for bomb in self.bombs:
-            bomb.move()
+        for set_bombs in self.bombs:
+            for bomb in set_bombs:
+                bomb.move()
+                print(bomb.coord, end=",")
 
     def game_show(self):
         self.cannon.show()
@@ -220,8 +225,10 @@ class GameManager:
             shell.show()
         for target in self.non_moving_targets:
             target.show()
-        for bomb in self.bombs:
-            bomb.show()
+        for set_bombs in self.bombs:
+            for bomb in set_bombs:
+                bomb.show()
+
 
 def main():
     pygame.init()
@@ -235,6 +242,15 @@ def main():
             time = pygame.time.get_ticks()
             print('hello')
             mng.target_fire()
+            """
+            for set_bombs in mng.bombs: # TODO сделать распаковку списков до каждой бомбы
+                for bomb in set_bombs:
+                    bomb.show()
+            for set_bombs in mng.bombs:
+                for bomb in set_bombs:
+                    bomb.move()
+            print(mng.bombs)
+"""
         mng.event_handler()
         mng.move()
         mng.game_show()
