@@ -175,6 +175,7 @@ class GameManager:
         self.shells = []
         self.non_moving_targets = []
         self.bombs = []
+        self.set_init_bombs = []
         self.finished = False
 
     def non_moving_target_creation(self, n):
@@ -182,11 +183,14 @@ class GameManager:
             self.non_moving_targets.append(Target())
         return self.non_moving_targets
 
-    def target_fire(self): # TODO сделать список списков
-        set_bombs = []
+    def target_fire(self):
+        self.set_init_bombs.clear()
         for target in self.non_moving_targets:
-            set_bombs.append(target.fire())
-        self.bombs.append(set_bombs)
+            self.set_init_bombs.append(target.fire())
+        for bomb in self.set_init_bombs:
+            bomb.show()
+        self.bombs.insert(0, self.set_init_bombs)
+        print(self.bombs)
         return self.bombs
 
     def event_handler(self):
@@ -213,11 +217,12 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
+                """
         for set_bombs in self.bombs:
             for bomb in set_bombs:
                 bomb.move()
                 print(bomb.coord, end=",")
-
+"""
     def game_show(self):
         self.cannon.show()
         self.gun.show()
@@ -225,11 +230,12 @@ class GameManager:
             shell.show()
         for target in self.non_moving_targets:
             target.show()
+            """
         for set_bombs in self.bombs:
             for bomb in set_bombs:
                 bomb.show()
 
-
+"""
 def main():
     pygame.init()
     time = pygame.time.get_ticks()
@@ -242,15 +248,12 @@ def main():
             time = pygame.time.get_ticks()
             print('hello')
             mng.target_fire()
-            """
             for set_bombs in mng.bombs: # TODO сделать распаковку списков до каждой бомбы
                 for bomb in set_bombs:
                     bomb.show()
             for set_bombs in mng.bombs:
                 for bomb in set_bombs:
                     bomb.move()
-            print(mng.bombs)
-"""
         mng.event_handler()
         mng.move()
         mng.game_show()
