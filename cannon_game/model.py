@@ -109,12 +109,29 @@ class Shell(CannonGun):
         return self.coord[0] <= 0 or self.coord[0] >= width or self.coord[1] <= 0 or self.coord[1] >= height
 
 
+class List:
+    target_field_width = width
+    target_field_height = height // 3
+
+    def __init__(self):
+        self.width = 100
+        self.height = 50
+        self.list = []
+
+    def random_list(self):
+        self.list.append(randint(0, self.target_field_width - self.width))
+        self.list.append(randint(0, self.target_field_height - self.height))
+        return self.list
+
+
+coords = List().random_list()
+
+
 class Target:
     target_field_width = width
     target_field_height = height // 3
 
     def __init__(self):
-        self.coord = []
         self.width = 100
         self.height = 50
         self.coord = self.set_coords()
@@ -123,6 +140,7 @@ class Target:
         self.pow = 30
 
     def set_coords(self):
+        self.coord = []
         self.coord.append(randint(0, self.target_field_width - self.width))
         self.coord.append(randint(0, self.target_field_height - self.height))
         return self.coord
@@ -157,9 +175,9 @@ class Bomb(Target):
     def __init__(self):
         super().__init__()
         self.radius = 30
+        self.Vy = 0
 
     def move(self):
-        #self.coord[0] += int(math.cos(self.angle) * self.pow)
         self.coord[1] += 10
 
     def show(self):
@@ -171,19 +189,9 @@ class GameManager:
         self.cannon = Cannon()
         self.gun = CannonGun()
         self.shells = []
-        self.non_moving_targets = []
-        self.bombs = []
+        #self.target = Target()
+        #self.bomb = self.target.fire()
         self.finished = False
-
-    def non_moving_target_creation(self, n):
-        for i in range(n):
-            self.non_moving_targets.append(Target())
-        return self.non_moving_targets
-
-    def target_fire(self):
-        for target in self.non_moving_targets:
-            self.bombs.append(target.fire())
-        return self.bombs
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -209,18 +217,12 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
-        for bomb in self.bombs:
-            bomb.move()
 
     def game_show(self):
         self.cannon.show()
         self.gun.show()
         for shell in self.shells:
             shell.show()
-        for target in self.non_moving_targets:
-            target.show()
-        for bomb in self.bombs:
-            bomb.show()
 
 
 def main():
@@ -228,16 +230,20 @@ def main():
     time = pygame.time.get_ticks()
     clock = pygame.time.Clock()
     mng = GameManager()
-    mng.non_moving_target_creation(5)
+    target = Target()
+    bomb = target.fire()
     while not mng.finished:
         clock.tick(30)
         if pygame.time.get_ticks() >= time + 1000:
             time = pygame.time.get_ticks()
             print('hello')
-            mng.target_fire()
+            bomb = target.fire()
         mng.event_handler()
         mng.move()
         mng.game_show()
+        target.show()
+        bomb.show()
+        bomb.move()
         pygame.display.flip()
         screen.fill(BLACK)
 
