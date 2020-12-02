@@ -4,10 +4,7 @@ import lib_ball_game as lib
 pygame.init()
 
 n = 10
-
-pygame.display.update()
-clock = pygame.time.Clock()
-done = False
+got_balls = 0
 
 
 class Ball:
@@ -39,37 +36,44 @@ class Ball:
             return self.y
 
 
-list_ball = [0]*n
-for i in range(n):
-    x = randint(50, 700)
-    y = randint(50, 550)
-    r = randint(40,50)
-    color = lib.colors[randint(0,5)]
-    direction = randint(1, 2)
-    list_ball[i] = Ball(x, y, r, color, direction)
-while not done:
-    clock.tick(30)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            event.x, event.y = event.pos
-            for i in range(len(list_ball)):
-                length = ((event.x - list_ball[i].coord(x, 0))**2 + (event.y - list_ball[i].coord(0, y))**2)**0.5
-                if length <= r:
-                    print('You got a ball')
-                    list_ball.pop(i)
-                    x = randint(50, 700)
-                    y = randint(50, 550)
-                    r = randint(40, 50)
-                    color = lib.colors[randint(0, 5)]
-                    direction = randint(1, 2)
-                    list_ball.insert(i,Ball(x, y, r, color, direction))
-    for i in range(len(list_ball)):
-        list_ball[i].draw()
-    pygame.display.update()
-    lib.screen.fill(lib.black)
-    for i in range(len(list_ball)):
-        list_ball[i].move()
+if __name__ == "__main__":
+    clock = pygame.time.Clock()
+    done = False
+    list_ball = [0]*n
+    for i in range(n):
+        x = randint(50, 700)
+        y = randint(50, 550)
+        r = randint(40,50)
+        color = lib.colors[randint(0,5)]
+        direction = randint(1, 2)
+        list_ball[i] = Ball(x, y, r, color, direction)
+    while not done:
+        clock.tick(30)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print('You got: ',got_balls,'balls')
+                output = open('output.txt', 'w')
+                print('You got: ',got_balls,'balls', file=output)
+                output.close()
+                done = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                event.x, event.y = event.pos
+                for i in range(len(list_ball)):
+                    length = ((event.x - list_ball[i].coord(x, 0))**2 + (event.y - list_ball[i].coord(0, y))**2)**0.5
+                    if length <= r:
+                        got_balls+=1
+                        list_ball.pop(i)
+                        x = randint(50, 700)
+                        y = randint(50, 550)
+                        r = randint(40, 50)
+                        color = lib.colors[randint(0, 5)]
+                        direction = randint(1, 2)
+                        list_ball.insert(i,Ball(x, y, r, color, direction))
+        for i in range(len(list_ball)):
+            list_ball[i].draw()
+        pygame.display.update()
+        lib.screen.fill(lib.black)
+        for i in range(len(list_ball)):
+            list_ball[i].move()
 
 pygame.quit()
