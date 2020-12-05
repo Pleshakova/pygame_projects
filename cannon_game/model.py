@@ -135,7 +135,7 @@ class Target:
         self.width = 100
         self.height = 50
         self.coord = self.set_coords()
-        self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
+        self.target_center = []
         self.fire_angle = math.pi * 3 / 2
         self.pow = 30
 
@@ -150,7 +150,8 @@ class Target:
         Создает бомбу с передачей собственных координат и с заданным направлением удара
         :return: экземпляр бомбы
         """
-        bomb = Bomb()
+        self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
+        bomb = Bomb(list(self.target_center))
         return bomb
 
     def show(self):
@@ -172,8 +173,9 @@ class TargetMove(Target):
 
 
 class Bomb(Target):
-    def __init__(self):
+    def __init__(self, coord):
         super().__init__()
+        self.coord = coord
         self.radius = 30
         self.Vy = 0
 
@@ -189,9 +191,17 @@ class GameManager:
         self.cannon = Cannon()
         self.gun = CannonGun()
         self.shells = []
-        #self.target = Target()
-        #self.bomb = self.target.fire()
+        self.targets = []
+        self.bombs = []
         self.finished = False
+
+    def creation_targets(self, n):
+        self.targets = [Target() for i in range(n)]
+        return self.targets
+
+    def creation_bombs(self):
+        self.bombs = [target.fire() for target in self.targets]
+        return self.bombs
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -217,12 +227,18 @@ class GameManager:
                 shell.move()
             else:
                 self.shells.remove(shell)
+        for bomb in self.bombs:
+            bomb.move()
 
     def game_show(self):
         self.cannon.show()
         self.gun.show()
         for shell in self.shells:
             shell.show()
+        for target in self.targets:
+            target.show()
+        for bomb in self.bombs:
+            bomb.show()
 
 
 def main():
@@ -230,20 +246,17 @@ def main():
     time = pygame.time.get_ticks()
     clock = pygame.time.Clock()
     mng = GameManager()
-    target = Target()
-    bomb = target.fire()
+    mng.creation_targets(5)
+    mng.creation_bombs()
     while not mng.finished:
         clock.tick(30)
         if pygame.time.get_ticks() >= time + 1000:
             time = pygame.time.get_ticks()
-            print('hello')
-            bomb = target.fire()
+            mng.creation_bombs()
+            print(len(mng.creation_bombs()))
         mng.event_handler()
         mng.move()
         mng.game_show()
-        target.show()
-        bomb.show()
-        bomb.move()
         pygame.display.flip()
         screen.fill(BLACK)
 
