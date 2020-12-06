@@ -187,6 +187,7 @@ class Bomb(Target):
 
 
 class GameManager:
+    target_number = 5
     def __init__(self):
         self.cannon = Cannon()
         self.gun = CannonGun()
@@ -195,12 +196,13 @@ class GameManager:
         self.bombs = []
         self.finished = False
 
-    def creation_targets(self, n):
+    def creation_targets(self, n=target_number):
         self.targets = [Target() for i in range(n)]
         return self.targets
 
-    def creation_bombs(self):
-        self.bombs = [target.fire() for target in self.targets]
+    def creation_bombs(self, n=target_number):
+        target = self.targets[randint(0, n-1)]
+        self.bombs.append(target.fire())
         return self.bombs
 
     def event_handler(self):
@@ -246,14 +248,13 @@ def main():
     time = pygame.time.get_ticks()
     clock = pygame.time.Clock()
     mng = GameManager()
-    mng.creation_targets(5)
+    mng.creation_targets()
     mng.creation_bombs()
     while not mng.finished:
         clock.tick(30)
         if pygame.time.get_ticks() >= time + 1000:
             time = pygame.time.get_ticks()
             mng.creation_bombs()
-            print(len(mng.creation_bombs()))
         mng.event_handler()
         mng.move()
         mng.game_show()
