@@ -18,13 +18,12 @@ class Cannon:
         self.y = 600
         self.is_alive = True
 
-    def is_alive(self):
+    def is_not_alive(self):
         """
         Определяет уничтожена или нет пушка
         :return: статус пушки - не уничтожена
         """
-        if self.health >= 0:
-            return self.is_alive
+        return self.health < 0
 
     def get_damage(self):
         self.health -= 1  # FIXME добавить условие соударения пушки с бомбой
@@ -109,24 +108,6 @@ class Shell(CannonGun):
         return self.coord[0] <= 0 or self.coord[0] >= width or self.coord[1] <= 0 or self.coord[1] >= height
 
 
-class List:
-    target_field_width = width
-    target_field_height = height // 3
-
-    def __init__(self):
-        self.width = 100
-        self.height = 50
-        self.list = []
-
-    def random_list(self):
-        self.list.append(randint(0, self.target_field_width - self.width))
-        self.list.append(randint(0, self.target_field_height - self.height))
-        return self.list
-
-
-coords = List().random_list()
-
-
 class Target:
     target_field_width = width
     target_field_height = height // 3
@@ -164,11 +145,11 @@ class TargetMove(Target):
         self.Vx = randint(-5, 5)
 
     def move(self):
-        if self.is_reached_border():
+        if self.is_border_reached():
             self.Vx = -1 * self.Vx
         self.coord[0] += self.Vx
 
-    def is_reached_border(self):
+    def is_border_reached(self):
         return self.coord[0] + self.width // 2 >= width or self.coord[0] - self.width // 2 <= 0
 
 
@@ -180,10 +161,13 @@ class Bomb(Target):
         self.Vy = 0
 
     def move(self):
-        self.coord[1] += 10
+        self.coord[1] += 5
 
     def show(self):
         pygame.draw.circle(screen, [100, 100, 100], self.coord, self.radius)  # TODO change color
+
+    def is_border_reached(self):
+        return self.coord[0] < 0 or self.coord[0] > width or self.coord[1] > height
 
 
 class GameManager:
@@ -196,14 +180,28 @@ class GameManager:
         self.bombs = []
         self.finished = False
 
-    def creation_targets(self, n=target_number):
+    def target_creation(self, n=target_number):
         self.targets = [Target() for i in range(n)]
         return self.targets
 
-    def creation_bombs(self, n=target_number):
+    def bomb_creation(self, n=target_number):
         target = self.targets[randint(0, n-1)]
         self.bombs.append(target.fire())
         return self.bombs
+
+    def is_cannon_bombed(self):
+        for bomb in self.bombs:
+            length = ((self.cannon.x - bomb.coord[0])**2 + (self.cannon.y - bomb.coord[1])**2)**0.5
+            if length <= self.cannon.standart_radius + bomb.radius:
+                self.cannon.get_damage()
+                if self.cannon.is_not_alive():
+                    print('GAME IS OVER')
+                self.bombs.remove(bomb)
+
+    def bomb_control_border(self):
+        for bomb in self.bombs:
+            if bomb.is_border_reached():
+                self.bombs.remove(bomb)
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -248,13 +246,15 @@ def main():
     time = pygame.time.get_ticks()
     clock = pygame.time.Clock()
     mng = GameManager()
-    mng.creation_targets()
-    mng.creation_bombs()
+    mng.target_creation()
+    mng.bomb_creation()
     while not mng.finished:
         clock.tick(30)
         if pygame.time.get_ticks() >= time + 1000:
             time = pygame.time.get_ticks()
-            mng.creation_bombs()
+            mng.bomb_creation()
+        mng.bomb_control_border()
+        mng.is_cannon_bombed()
         mng.event_handler()
         mng.move()
         mng.game_show()
