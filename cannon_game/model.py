@@ -1,5 +1,6 @@
 import pygame
 from random import randint
+import random
 import math
 
 width = 800
@@ -117,7 +118,7 @@ class Target:
         self.height = 50
         self.coord = self.set_coords()
         self.target_center = []
-        self.fire_angle = math.pi * 3 / 2
+        self.fire_angle = 0
         self.pow = 30
 
     def set_coords(self):
@@ -131,8 +132,10 @@ class Target:
         Создает бомбу с передачей собственных координат и с заданным направлением удара
         :return: экземпляр бомбы
         """
+        fire_angle = [math.pi * 1 / 4, math.pi * 1 / 2, math.pi * 3 / 4]
+        self.fire_angle = fire_angle[randint(0, 2)]
         self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
-        bomb = Bomb(list(self.target_center))
+        bomb = Bomb(list(self.target_center), self.fire_angle)
         return bomb
 
     def show(self):
@@ -154,14 +157,16 @@ class TargetMove(Target):
 
 
 class Bomb(Target):
-    def __init__(self, coord):
+    def __init__(self, coord, angle):
         super().__init__()
         self.coord = coord
+        self.angle = angle
         self.radius = 30
         self.Vy = 0
 
     def move(self):
-        self.coord[1] += 5
+        self.coord[0] += int(math.cos(self.angle) * 5)
+        self.coord[1] += int(math.sin(self.angle) * 5)
 
     def show(self):
         pygame.draw.circle(screen, [100, 100, 100], self.coord, self.radius)  # TODO change color
@@ -172,6 +177,7 @@ class Bomb(Target):
 
 class GameManager:
     target_number = 5
+
     def __init__(self):
         self.cannon = Cannon()
         self.gun = CannonGun()
@@ -181,7 +187,17 @@ class GameManager:
         self.finished = False
 
     def target_creation(self, n=target_number):
-        self.targets = [Target() for i in range(n)]
+        target = Target()
+        self.targets.append(target)
+        while len(self.targets) <= n - 1:
+            indicator = 0
+            other = Target()
+            for target in self.targets:
+                length = ((target.coord[0] - other.coord[0]) ** 2 + (target.coord[1] - other.coord[1]) ** 2) ** 0.5
+                if length <= 100:
+                    indicator = 1
+            if indicator == 0:
+                self.targets.append(other)
         return self.targets
 
     def bomb_creation(self, n=target_number):
@@ -196,6 +212,7 @@ class GameManager:
                 self.cannon.get_damage()
                 if self.cannon.is_not_alive():
                     print('GAME IS OVER')
+                    self.finished = True
                 self.bombs.remove(bomb)
 
     def bomb_control_border(self):
@@ -203,7 +220,7 @@ class GameManager:
             if bomb.is_border_reached():
                 self.bombs.remove(bomb)
 
-    def event_handler(self):
+    def event_handler(self, dt):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.finished = True
@@ -245,6 +262,7 @@ def main():
     pygame.init()
     time = pygame.time.get_ticks()
     clock = pygame.time.Clock()
+    dt = clock.tick(30) / 1000
     mng = GameManager()
     mng.target_creation()
     mng.bomb_creation()
@@ -255,7 +273,7 @@ def main():
             mng.bomb_creation()
         mng.bomb_control_border()
         mng.is_cannon_bombed()
-        mng.event_handler()
+        mng.event_handler(dt)
         mng.move()
         mng.game_show()
         pygame.display.flip()
@@ -264,3 +282,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    pygame.quit()
