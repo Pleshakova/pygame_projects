@@ -1,6 +1,5 @@
 import pygame
 from random import randint
-import random
 import math
 
 width = 800
@@ -78,18 +77,17 @@ class CannonGun(Cannon):
         :return: экземпляр снаряда
         """
         self.pow = 100
-        shell = Shell(coord=self.coord, angle=self.angle)
+        shell = Shell(self.coord, self.angle)
         shell.Vx = self.pow * math.cos(shell.angle)
         shell.Vy = -self.pow * math.sin(shell.angle)
         return shell
 
 
-class Shell(CannonGun):
+class Shell:
     standart_radius = 15
 
     def __init__(self, coord, angle):
         """Координаты снаряда наследуются от дула пушки"""
-        super().__init__()
         self.coord = coord
         self.angle = angle
         self.Vx = 0
@@ -117,7 +115,7 @@ class Target:
         self.width = 100
         self.height = 50
         self.coord = self.set_coords()
-        self.target_center = []
+        self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
         self.fire_angle = 0
         self.pow = 30
 
@@ -134,12 +132,15 @@ class Target:
         """
         fire_angle = [math.pi * 1 / 4, math.pi * 1 / 2, math.pi * 3 / 4]
         self.fire_angle = fire_angle[randint(0, 2)]
-        self.target_center = [self.coord[0] + self.width // 2, self.coord[1] + self.height // 2]
         bomb = Bomb(list(self.target_center), self.fire_angle)
         return bomb
 
     def show(self):
         pygame.draw.ellipse(screen, color, (self.coord[0], self.coord[1], self.width, self.height))
+
+    def get_collision(self, list, radius):
+        length = ((self.target_center[0] - list[0]) ** 2 + (self.target_center[1] - list[1]) ** 2) ** 0.5
+        return length <= radius + self.height // 2
 
 
 class TargetMove(Target):
@@ -156,9 +157,8 @@ class TargetMove(Target):
         return self.coord[0] + self.width // 2 >= width or self.coord[0] - self.width // 2 <= 0
 
 
-class Bomb(Target):
+class Bomb:
     def __init__(self, coord, angle):
-        super().__init__()
         self.coord = coord
         self.angle = angle
         self.radius = 30
@@ -190,20 +190,26 @@ class GameManager:
         target = Target()
         self.targets.append(target)
         while len(self.targets) <= n - 1:
-            indicator = 0
+            indicator = True
             other = Target()
             for target in self.targets:
                 length = ((target.coord[0] - other.coord[0]) ** 2 + (target.coord[1] - other.coord[1]) ** 2) ** 0.5
                 if length <= 100:
-                    indicator = 1
-            if indicator == 0:
+                    indicator = False
+            if indicator:
                 self.targets.append(other)
         return self.targets
 
-    def bomb_creation(self, n=target_number):
-        target = self.targets[randint(0, n-1)]
-        self.bombs.append(target.fire())
-        return self.bombs
+    def bomb_creation(self):
+        for target in self.targets: # TODO What does it for?
+            target = self.targets[randint(0, len(self.targets)-1)]
+            self.bombs.append(target.fire())
+            return self.bombs
+
+    def bomb_control_border(self):
+        for bomb in self.bombs:
+            if bomb.is_border_reached():
+                self.bombs.remove(bomb)
 
     def is_cannon_bombed(self):
         for bomb in self.bombs:
@@ -213,11 +219,6 @@ class GameManager:
                 if self.cannon.is_not_alive():
                     print('GAME IS OVER')
                     self.finished = True
-                self.bombs.remove(bomb)
-
-    def bomb_control_border(self):
-        for bomb in self.bombs:
-            if bomb.is_border_reached():
                 self.bombs.remove(bomb)
 
     def event_handler(self, dt):
@@ -237,6 +238,16 @@ class GameManager:
                 if event.key == pygame.K_LEFT:
                     self.cannon.move(-10)
                     self.gun.move(-10)
+
+    def collision(self):
+        for target in self.targets:
+            for shell in self.shells:
+                if target.get_collision(shell.coord, shell.standart_radius):
+                    self.targets.remove(target)
+                    self.shells.remove(shell)
+        if not self.targets:
+            print('YOU WIN!')
+            self.finished = True
 
     def move(self):
         for shell in self.shells:
@@ -274,6 +285,7 @@ def main():
         mng.bomb_control_border()
         mng.is_cannon_bombed()
         mng.event_handler(dt)
+        mng.collision()
         mng.move()
         mng.game_show()
         pygame.display.flip()
