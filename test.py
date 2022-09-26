@@ -20,15 +20,15 @@ class Target:
 
     def set_coord(self):
         self.coord = []
-        self.coord.append(randint(0, self.target_field_width - self.width))
-        self.coord.append(randint(0, self.target_field_height - self.height))
+        self.coord.append(randint(0, 700))
+        self.coord.append(randint(0, 300))
         return self.coord
 
     def show(self):
         pygame.draw.circle(screen, color, self.coord, self.r)
 
     def fire(self):
-        bomb = Bomb(self.coord)
+        bomb = Bomb(list(self.coord))
         bomb.Vy = 10
         return bomb
 
@@ -36,8 +36,8 @@ class Target:
 class Bomb(Target):
     def __init__(self, coord):
         super().__init__()
-        self.coord = coord
         self.radius = 20
+        self.coord = coord
         self.Vy = 0
 
     def show(self):

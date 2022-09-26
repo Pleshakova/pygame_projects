@@ -118,13 +118,13 @@ def draw_tree(x, y, width, height):
     pygame.draw.polygon(screen, dark_green, [(x, y_top_2triangle), (x - width // 3 * 2, y_bottom_2triangle), (x + width // 3 * 2, y_bottom_2triangle)])
     pygame.draw.polygon(screen, dark_green, [(x, y_top_3triangle), (x - width, y_bottom_3triangle), (x + width, y_bottom_3triangle)])
 
-
-main()
+if __name__ == "__main__":
+    main()
 done = False
 
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-    pygame.display.flip()
+    pygame.display.update()
 pygame.quit()
