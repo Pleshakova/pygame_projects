@@ -1,2 +1,2 @@
-# infa_2020_pleshakova
-"Hello world"
+# pygame_projects
+Pet проекты с использованием библиотеки pygame
